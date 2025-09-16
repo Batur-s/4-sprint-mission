@@ -1,6 +1,7 @@
 import { z } from "zod";
 import httpStatus from "http-status";
-import express , { type Request, type Response, type NextFunction } from "express";
+import { Request, Response, NextFunction } from "express";
+import { Prisma } from "@prisma/client";
 
 interface ExtendedError extends Error {
   code?: string;
@@ -11,9 +12,11 @@ export function errorHandler(err: ExtendedError, req: Request, res: Response, ne
     return res.status(httpStatus.BAD_REQUEST).json({ error: err.issues });
   }
 
+  if (err instanceof Prisma.PrismaClientKnownRequestError) { // 'err.code === "P2025"'가 담아내지 못한 오류 잡기 위함
   if (err.code === "P2025") {
     return res.status(httpStatus.NOT_FOUND).json({ error: "Record not found" });
   }
+}
 
   console.error("unhandled Error:", err);
   return res
